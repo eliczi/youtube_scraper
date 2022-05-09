@@ -4,19 +4,21 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import time
+import pandas as pd
 
 path = "C:\\Users\Adam\Documents\GitHub\youtube_scraper\chromedriver.exe"
-video = "https://www.youtube.com/watch?v=U6gbGk5WPws"
+video = "https://www.youtube.com/watch?v=90nxF3HVL4g"
 driver = webdriver.Chrome(path)
 driver.get(video)
 driver.implicitly_wait(10)
 x = driver.find_element(by=By.CSS_SELECTOR,
                         value="[aria-label='Accept the use of cookies and other data for the purposes described']")
 x.click()
-button = driver.find_element(by=By.CLASS_NAME, value='ytp-ad-skip-button-container')
-button.click()
-x = driver.find_element(by=By.CSS_SELECTOR, value="[aria-label='Skip trial']")
-x.click()
+
+# button = driver.find_element(by=By.CLASS_NAME, value='ytp-ad-skip-button-container')
+# button.click()
+# x = driver.find_element(by=By.CSS_SELECTOR, value="[aria-label='Skip trial']")
+# x.click()
 
 
 def scroll_to_bottom():
@@ -37,3 +39,14 @@ def scroll_num_times(num):
         height = driver.execute_script("return document.documentElement.scrollHeight")
         driver.execute_script("window.scrollTo(0, " + str(height) + ");")
         time.sleep(1)
+
+
+scroll_to_bottom()
+data = []
+
+
+for comment in WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.ID, "content-text"))):
+    data.append(comment.text)
+
+df = pd.DataFrame(data)
+print(df.head())
