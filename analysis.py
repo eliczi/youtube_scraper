@@ -3,7 +3,6 @@ import nltk
 from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-
 df = pd.read_csv('data.csv')
 df.columns = ['text']
 df.insert(0, 'id', range(0, 0 + len(df)))
@@ -39,7 +38,7 @@ fd.most_common()
 
 import seaborn as sns
 sns.set_theme(style="ticks")
-top_10 = fd.most_common(10)
+top_10 = fd.most_common(100)
 fdist = pd.Series(dict(top_10))
 
-sns.barplot(y=fdist.index, x=fdist.values, color='blue');
+sns.barplot(y=fdist.index, x=fdist.values, color='blue')
