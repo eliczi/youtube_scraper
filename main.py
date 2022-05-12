@@ -4,7 +4,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import time
-import pandas as pd
 
 path = "C:\\Users\Adam\Documents\GitHub\youtube_scraper\chromedriver.exe"
 
