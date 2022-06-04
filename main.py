@@ -22,17 +22,21 @@ class YouTubeScraper:
 
     def scrape(self):
         self.driver.get(self.video)
-        self.driver.implicitly_wait(10)
+        self.driver.implicitly_wait(2)
         self.accept_cookies()
         # self.skip_ad()
+        # self.change_comments_sorting()
         self.scroll_to_bottom()
-        #self.scroll_num_times(2)
         self.test()
         # print(self.comments)
 
+    def change_comments_sorting(self):
+        if self.sort_by != 'top':
+            sort = self.driver.find_elements(by=By.CSS_SELECTOR, value="[aria-label='Sort comments']")
+            self.driver.execute_script("arguments[0].click();", sort[0])
+
     def test(self):
         main_comments = self.driver.find_elements(by=By.CSS_SELECTOR, value='ytd-comment-thread-renderer')
-        print(len(main_comments))
         for mc in main_comments:
             text = mc.find_element(by=By.ID, value='content-text').text
             self.comments['comments'].append(text)
@@ -51,23 +55,35 @@ class YouTubeScraper:
                      'date': [],
                      'replies': [],
                      'channel': []}
+
             replies = mc.find_element(by=By.ID, value='replies')
             if replies.text != '':
-
                 btn = replies.find_element(by=By.ID, value='button')
                 self.driver.execute_script("arguments[0].scrollIntoView();", btn)
                 self.driver.execute_script("arguments[0].click();", btn)
-                print('clicked')
-                time.sleep(2)
-                wd = mc.find_elements(by= By.CSS_SELECTOR, value ="[aria-label='Show more replies']" )
-                if len(wd) !=0:
-                    print('more replies')
-
-            # replies = replies.find_element(by=By.ID, value='contents')
-            # replies = replies.find_elements(by=By.CLASS_NAME, value='ytd-comment-replies-renderer')
-            # print(len(replies))
-            # for r in replies:
-            #     print(r.text)
+                wd = mc.find_elements(by=By.CSS_SELECTOR, value="[aria-label='Show more replies']")
+                if len(wd) != 0:
+                    self.driver.execute_script("arguments[0].click();", wd[0])
+                    time.sleep(1)
+                replies = mc.find_element(by=By.ID, value='expander-contents')
+                replies = mc.find_elements(by=By.ID, value='body')
+                for i, r in enumerate(replies):
+                    if i == 0:  # for some reason, the first reply is the original comment, so it is skipped
+                        continue
+                    text = r.find_element(by=By.ID, value='content-text').text
+                    repli['comments'].append(text)
+                    likes = r.find_element(by=By.ID, value='vote-count-middle')
+                    repli['likes'].append(likes.text)
+                    author = r.find_element(by=By.ID, value='author-text')
+                    repli['username'].append(author.text)
+                    main_comment_channel = r.find_element(by=By.ID, value='author-text').get_attribute('href')
+                    # main_comment_channel = r.find_element_by_id('author-text').get_attribute('href')
+                    repli['channel'].append(main_comment_channel)
+                    date = r.find_element(by=By.CLASS_NAME, value='published-time-text')
+                    repli['date'].append(date.text)
+                self.comments['replies'].append(repli)
+            else:
+                self.comments['replies'].append(None)
 
     def show_more_replies(self, comment):
         wd = comment.find_elements(by=By.CSS_SELECTOR, value="[aria-label='Show more replies']")
@@ -93,6 +109,7 @@ class YouTubeScraper:
         x = self.driver.find_element(by=By.CSS_SELECTOR,
                                      value="[aria-label='Accept the use of cookies and other data for the purposes described']")
         x.click()
+        time.sleep(2)
 
     def skip_ad(self):
         button = self.driver.find_element(by=By.CLASS_NAME, value='ytp-ad-skip-button-container')
@@ -105,9 +122,11 @@ class YouTubeScraper:
     def scroll_to_bottom(self):
         page_eng = False
         last_height = self.driver.execute_script("return document.documentElement.scrollHeight")
+        self.driver.execute_script("window.scrollTo(0, 200)")  # initial sroll to load first comments
+        time.sleep(1)
         while not page_eng:
             self.driver.execute_script("window.scrollTo(0, " + str(last_height) + ");")
-            time.sleep(2)
+            time.sleep(1)
             new_height = self.driver.execute_script("return document.documentElement.scrollHeight")
             if last_height == new_height:
                 page_eng = True
@@ -121,6 +140,10 @@ class YouTubeScraper:
             time.sleep(1)
 
 
-# yt = YouTubeScraper('https://www.youtube.com/watch?v=dDtLZ-l_ItE')
-yt = YouTubeScraper('https://www.youtube.com/watch?v=tBQEONNKU6U')
-yt.scrape()
+def main(line=None, sort_by=None):
+    yt = YouTubeScraper('https://www.youtube.com/watch?v=Mb3tyjibXCg')
+    yt.scrape()
+
+
+if __name__ == '__main__':
+    main()
