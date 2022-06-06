@@ -20,10 +20,10 @@ class YouTubeScraper:
 
     def scrape(self):
         self.driver.get(self.video)
-        self.driver.implicitly_wait(2)
+        self.driver.implicitly_wait(1)
         self.accept_cookies()
         self.scroll_to_bottom()
-        self.test()
+        self.extract_comments()
 
     def change_comments_sorting(self):
         if self.sort_by != 'top':
@@ -32,7 +32,7 @@ class YouTubeScraper:
             self.driver.execute_script("arguments[0].click();", sort)
             print('ok')
 
-    def test(self):
+    def extract_comments(self):
         main_comments = self.driver.find_elements(by=By.CSS_SELECTOR, value='ytd-comment-thread-renderer')
         for mc in main_comments:
             text = mc.find_element(by=By.ID, value='content-text').text
