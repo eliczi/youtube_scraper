@@ -3,7 +3,6 @@ from selenium.webdriver.common.by import By
 import time
 
 
-
 class YouTubeScraper:
     def __init__(self, video, sort_by='top'):
         self.sort_by = sort_by
@@ -30,54 +29,57 @@ class YouTubeScraper:
             sort = self.driver.find_element(by=By.CSS_SELECTOR, value="[aria-label='Sort comments']")
             self.driver.execute_script("arguments[0].scrollIntoView();", sort)
             self.driver.execute_script("arguments[0].click();", sort)
-            print('ok')
 
     def extract_comments(self):
         main_comments = self.driver.find_elements(by=By.CSS_SELECTOR, value='ytd-comment-thread-renderer')
-        for mc in main_comments:
-            text = mc.find_element(by=By.ID, value='content-text').text
+        for main_comment in main_comments:
+            text = main_comment.find_element(by=By.ID, value='content-text').text
             self.comments['comments'].append(text)
-            likes = mc.find_element(by=By.ID, value='vote-count-middle')
+            likes = main_comment.find_element(by=By.ID, value='vote-count-middle')
             self.comments['likes'].append(likes.text)
-            author = mc.find_element(by=By.ID, value='author-text')
+            author = main_comment.find_element(by=By.ID, value='author-text')
             self.comments['username'].append(author.text)
-            main_comment_channel = mc.find_element_by_id('author-text').get_attribute('href')
+            main_comment_channel = main_comment.find_element_by_id('author-text').get_attribute('href')
             self.comments['channel'].append(main_comment_channel)
-            date = mc.find_element(by=By.CLASS_NAME, value='published-time-text')
+            date = main_comment.find_element(by=By.CLASS_NAME, value='published-time-text')
             self.comments['date'].append(date.text)
 
-            repli = {'comments': [],
-                     'likes': [],
-                     'username': [],
-                     'date': [],
-                     'replies': [],
-                     'channel': []}
+            mc_replies = {'comments': [],
+                          'likes': [],
+                          'username': [],
+                          'date': [],
+                          'replies': [],
+                          'channel': []}
 
-            replies = mc.find_element(by=By.ID, value='replies')
+            replies = main_comment.find_element(by=By.ID, value='replies')
+            # If there are any replies
             if replies.text != '':
                 btn = replies.find_element(by=By.ID, value='button')
                 self.driver.execute_script("arguments[0].scrollIntoView();", btn)
                 self.driver.execute_script("arguments[0].click();", btn)
-                wd = mc.find_elements(by=By.CSS_SELECTOR, value="[aria-label='Show more replies']")
-                if len(wd) != 0:
-                    self.driver.execute_script("arguments[0].click();", wd[0])
+                more_replies = main_comment.find_elements(by=By.CSS_SELECTOR, value="[aria-label='Show more replies']")
+                # load more replies
+                if len(more_replies) != 0:
+                    self.driver.execute_script("arguments[0].click();", more_replies[0])
                     time.sleep(1)
-                replies = mc.find_element(by=By.ID, value='expander-contents')
-                replies = mc.find_elements(by=By.ID, value='body')
+
+                # ALl REPLIES
+                replies = main_comment.find_element(by=By.ID, value='expander-contents')
+                replies = main_comment.find_elements(by=By.ID, value='body')
                 for i, r in enumerate(replies):
                     if i == 0:  # for some reason, the first reply is the original comment, so it is skipped
                         continue
                     text = r.find_element(by=By.ID, value='content-text').text
-                    repli['comments'].append(text)
+                    mc_replies['comments'].append(text)
                     likes = r.find_element(by=By.ID, value='vote-count-middle')
-                    repli['likes'].append(likes.text)
+                    mc_replies['likes'].append(likes.text)
                     author = r.find_element(by=By.ID, value='author-text')
-                    repli['username'].append(author.text)
+                    mc_replies['username'].append(author.text)
                     main_comment_channel = r.find_element(by=By.ID, value='author-text').get_attribute('href')
-                    repli['channel'].append(main_comment_channel)
+                    mc_replies['channel'].append(main_comment_channel)
                     date = r.find_element(by=By.CLASS_NAME, value='published-time-text')
-                    repli['date'].append(date.text)
-                self.comments['replies'].append(repli)
+                    mc_replies['date'].append(date.text)
+                self.comments['replies'].append(mc_replies)
             else:
                 self.comments['replies'].append(None)
 
@@ -98,7 +100,7 @@ class YouTubeScraper:
     def scroll_to_bottom(self):
         page_eng = False
         last_height = self.driver.execute_script("return document.documentElement.scrollHeight")
-        self.driver.execute_script("window.scrollTo(0, 200)")  # initial sroll to load first comments
+        self.driver.execute_script("window.scrollTo(0, 200)")  # initial scroll to load first comments
         time.sleep(1)
         while not page_eng:
             self.driver.execute_script("window.scrollTo(0, " + str(last_height) + ");")
@@ -114,5 +116,3 @@ class YouTubeScraper:
             height = self.driver.execute_script("return document.documentElement.scrollHeight")
             self.driver.execute_script("window.scrollTo(0, " + str(height) + ");")
             time.sleep(1)
-
-
