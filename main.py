@@ -1,7 +1,7 @@
 from scraper import YouTubeScraper
 
 def main(line=None, sort_by=None):
-    yt = YouTubeScraper('https://www.youtube.com/watch?v=QuTW_jbiYhM&t=325s')
+    yt = YouTubeScraper('https://www.youtube.com/watch?v=WTs3CKAIkVs')
     yt.scrape()
 
 

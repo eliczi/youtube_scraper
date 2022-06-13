@@ -1,4 +1,5 @@
 from selenium import webdriver
+import chromedriver_binary
 from selenium.webdriver.common.by import By
 import time
 
@@ -7,9 +8,9 @@ class YouTubeScraper:
     def __init__(self, video, sort_by='top'):
         self.sort_by = sort_by
         self.video = video
-        self.path = "C:\\Users\Adam\Documents\GitHub\youtube_scraper\chromedriver.exe"
-
-        self.driver = webdriver.Chrome(self.path)
+        # self.path = "C:\\Users\Adam\Documents\GitHub\youtube_scraper\chromedriver.exe"
+        # self.driver = webdriver.Chrome(self.path)
+        self.driver = webdriver.Chrome()
         self.comments = {'comments': [],
                          'likes': [],
                          'username': [],
@@ -19,7 +20,7 @@ class YouTubeScraper:
 
     def scrape(self):
         self.driver.get(self.video)
-        self.driver.implicitly_wait(1)
+        # self.driver.implicitly_wait(1)
         self.accept_cookies()
         self.scroll_to_bottom()
         self.extract_comments()
@@ -44,7 +45,7 @@ class YouTubeScraper:
             date = main_comment.find_element(by=By.CLASS_NAME, value='published-time-text')
             self.comments['date'].append(date.text)
 
-            mc_replies = {'comments': [],
+            mc_replies = {'comments': [],  # main comment replies
                           'likes': [],
                           'username': [],
                           'date': [],
