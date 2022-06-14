@@ -52,12 +52,15 @@ class TextAnalysis:
     @staticmethod
     def convert_date(date):
         date = date.split()[:2]
-        if 'month' in date[1]:
+        if 'week' in date[1]:
+            date[1] = 'weeks'
+        elif 'month' in date[1]:
             date[0] = int(date[0]) * 4
+            date[1] = 'weeks'
         elif 'year' in date[1]:
             date[0] = int(date[0]) * 52
-        date[1] = 'weeks'
-        time_dict = dict((fmt, float(amount)) for amount, fmt in [date])
+            date[1] = 'weeks'
+        time_dict = {x: int(amount) for amount, x in [date]}
         dt = datetime.timedelta(**time_dict)
         return datetime.datetime.now() - dt
 
