@@ -11,14 +11,14 @@ import gensim.corpora as corpora
 import gensim
 
 
-ys = YouTubeScraper('https://www.youtube.com/watch?v=54kz9zv_080')
-ys.scrape()
-data = ys.comments
-replies = ys.comments['replies']  # list of dictionaries, 10th comment replies is 10th list element as a dict
-data.pop('replies', None)
-df = pd.DataFrame(data)
-df.to_csv('df.csv')
-# read without first column
+# ys = YouTubeScraper('https://www.youtube.com/watch?v=54kz9zv_080')
+# ys.scrape()
+# data = ys.comments
+# replies = ys.comments['replies']  # list of dictionaries, 10th comment replies is 10th list element as a dict
+# data.pop('replies', None)
+# df = pd.DataFrame(data)
+# df.to_csv('df.csv')
+# # read without first column
 
 
 class TextAnalysis:
@@ -168,4 +168,3 @@ class TextAnalysis:
 ta = TextAnalysis()
 ta.analyse()
 ta.topic(3)
-s = ta.df.loc[ta.df['username'] == 'Bassaholic91']
