@@ -22,8 +22,8 @@ import gensim
 
 
 class TextAnalysis:
-    def __init__(self):
-        self.df = pd.read_csv('df.csv', usecols=range(1, 6))
+    def __init__(self, file):
+        self.df = pd.read_csv(file, usecols=range(1, 6))
         self.copy_original_comment()
 
     def start(self):

@@ -3,7 +3,7 @@ import chromedriver_binary
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+import pandas as pd
 import time
 
 
@@ -20,6 +20,7 @@ class YouTubeScraper:
                          'date': [],
                          'replies': [],
                          'channel': []}
+        self.df = None
 
     def scrape(self):
         self.driver.get(self.video)
@@ -27,6 +28,9 @@ class YouTubeScraper:
         self.accept_cookies()
         self.scroll_to_bottom()
         self.extract_comments()
+        self.comments.pop('replies', None)
+        self.df = pd.DataFrame(self.comments)
+        self.df.to_csv('df.csv')
 
     def change_comments_sorting(self):
         if self.sort_by != 'top':
