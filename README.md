@@ -5,13 +5,15 @@
 * [Setup](#setup)
 
 ## General info
-This project is simple Lorem ipsum dolor generator.
+This project is simple data scraper and text analyzer. 
 	
 ## Technologies
 Project is created with:
-* Lorem version: 12.3
-* Ipsum version: 2.33
-* Ament library version: 999
+* selenium version: 4.1.5
+* pandas version: 1.4.2
+* numpy version: 1.22.3
+* nltk version: 3.7
+* gensim version: 4.2.0
 	
 ## Setup
 To run this project, install it locally using npm:
