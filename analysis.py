@@ -7,16 +7,18 @@ import datetime
 from scraper import YouTubeScraper
 from nltk.stem import WordNetLemmatizer
 from nltk.util import ngrams
+import gensim.corpora as corpora
+import gensim
 
 
-# ys = YouTubeScraper('https://www.youtube.com/watch?v=54kz9zv_080')
-# ys.scrape()
-# data = ys.comments
-# replies = ys.comments['replies']  # list of dictionaries, 10th comment replies is 10th list element as a dict
-# data.pop('replies', None)
-# df = pd.DataFrame(data)
-# df.to_csv('df.csv')
-# # read without first column
+ys = YouTubeScraper('https://www.youtube.com/watch?v=54kz9zv_080')
+ys.scrape()
+data = ys.comments
+replies = ys.comments['replies']  # list of dictionaries, 10th comment replies is 10th list element as a dict
+data.pop('replies', None)
+df = pd.DataFrame(data)
+df.to_csv('df.csv')
+# read without first column
 
 
 class TextAnalysis:
@@ -47,7 +49,8 @@ class TextAnalysis:
     def process_date(self):
         self.df['date'] = self.df['date'].apply(self.convert_date)
 
-    def convert_date(self, date):
+    @staticmethod
+    def convert_date(date):
         date = date.split()[:2]
         if 'month' in date[1]:
             date[0] = int(date[0]) * 4
@@ -66,8 +69,7 @@ class TextAnalysis:
         self.df['comments'] = self.df['comments'].str.lower()
 
     def tokenize(self):
-        # tokenize and lower case
-        for idx, row in self.df.iterrows():  # tokenize and lower case
+        for idx, row in self.df.iterrows():
             if self.df.at[idx, 'comments'] != '':
                 self.df.at[idx, 'comments'] = word_tokenize(self.df.at[idx, 'comments'])
 
@@ -86,8 +88,6 @@ class TextAnalysis:
         for idx, row in self.df.iterrows():
             self.df.at[idx, 'comments'] = [lemmatizer.lemmatize(w) for w in self.df.at[idx, 'comments']]
 
-        pass
-
     def stemming(self):
         ps = PorterStemmer()
 
@@ -96,31 +96,43 @@ class TextAnalysis:
 
     def top_words(self, n=10):
         self.join_words()
-        return Counter(" ".join(self.df["comments"]).split()).most_common(n)
-        self.tokenize()
+        most_common = Counter(" ".join(self.df["comments"]).split()).most_common(n)
+        print('Most common words')
+        for item in most_common:
+            print(f"'{item[0]}':", item[1])
+        print('\n')
 
     def most_liked_comments(self, n=10):
-        return self.df.sort_values(by=['likes'], ascending=False).head(n)
+        print("Most liked comments:")
+        most_liked = self.df.sort_values(by=['likes'], ascending=False).head(n)
+        for idx, row in most_liked.iterrows():
+            print(row['og_com'], '~', row['username'], f'- {row["likes"]} likes')
 
-    def i_dont_know_how_to_call_this_function(self):
+    def unique_word_comments(self, n):
         # number of comments in which given word appears
         my_dict = {}
-        for comment in ta.df['comments']:
+        for comment in self.df['comments']:
             for word in comment:
                 if word not in my_dict:
                     my_dict[f'{word}'] = 1
                 elif comment.count(word) == 1:
                     my_dict[f'{word}'] += 1
-        # for w in sorted(my_dict, key=my_dict.get, reverse=True):
-        #     print(w, my_dict[w])
+        # Most popular words in unique comments
+        most_common = Counter(my_dict).most_common(n)
+        print('Most common unique comment words')
+        for item in most_common:
+            print(f"'{item[0]}':", item[1])
+        print('\n')
 
     def ngrams(self, n, top_ngrams=10):
         all_words = []
         for comment in ta.df['comments'].values.tolist():
             all_words.extend(comment)
         n_grams = ngrams(all_words, n)
-        ngram_counts = Counter(n_grams)
-        ngram_counts.most_common(top_ngrams)
+        ngram_counts = Counter(n_grams).most_common(top_ngrams)
+        print(f'Top {top_ngrams} {n}-grams')
+        for item in ngram_counts:
+            print(item[0], item[1])
 
     def process(self):
         self.process_missing_data()
@@ -131,50 +143,29 @@ class TextAnalysis:
         self.process_date()
 
     def analyse(self):
-        ta.top_words(15)
-        most_liked = self.most_liked_comments(10)
+        self.process()
+        self.top_words(15)
+        self.tokenize()
+        self.unique_word_comments(15)
+        self.ngrams(2)
+        self.most_liked_comments(10)
         self.lemmatizing()
 
-        
+    def topic(self, n):
+        list_of_values = self.df['comments'].values.tolist()
+        comments_dictionary = corpora.Dictionary(list_of_values)
+        comments_dictionary.filter_extremes(no_above=0.9, no_below=ta.df['comments'].size * 0.05)
+        corpus = [comments_dictionary.doc2bow(text) for text in list_of_values]
+
+        lda_model = gensim.models.LdaMulticore(corpus=corpus,
+                                               id2word=comments_dictionary,
+                                               num_topics=n)
+        lda_model.print_topics()
+        for idx, topic in lda_model.print_topics():
+            print('Topic: {} \nWords: {}'.format(idx, topic))
+
+
 ta = TextAnalysis()
-ta.process_date()
-
-from collections import Counter
-
-# n grams
-
-
-dupa = ta.df['comments'].values.tolist()
-ta.df = ta.df.loc[ta.df['comments'] != '']
-import gensim.corpora as corpora
-import gensim
-
-lst = ta.df['comments'].values.tolist()
-
-com_dict = corpora.Dictionary(lst)
-com_dict.filter_extremes(no_above=0.9, no_below=ta.df['comments'].size * 0.05)
-texts = lst
-corpus = [com_dict.doc2bow(text) for text in texts]
-
-lda_model = gensim.models.LdaMulticore(corpus=corpus,
-                                       id2word=com_dict,
-                                       num_topics=5)
-lda_model.print_topics()
-print(lda_model.print_topics())
-doc_lda = lda_model[corpus]
-
-from gensim import corpora, models
-
-tfidf = models.TfidfModel(corpus)
-corpus_tfidf = tfidf[corpus]
-from pprint import pprint
-
-for doc in corpus_tfidf:
-    pprint(doc)
-    break
-lda_model = gensim.models.LdaMulticore(corpus, num_topics=10, id2word=com_dict, passes=2, workers=2)
-for idx, topic in lda_model.print_topics(-1):
-    print('Topic: {} \nWords: {}'.format(idx, topic))
-lda_model_tfidf = gensim.models.LdaMulticore(corpus_tfidf, num_topics=10, id2word=com_dict, passes=2, workers=4)
-for idx, topic in lda_model_tfidf.print_topics(-1):
-    print('Topic: {} Word: {}'.format(idx, topic))
+ta.analyse()
+ta.topic(3)
+s = ta.df.loc[ta.df['username'] == 'Bassaholic91']

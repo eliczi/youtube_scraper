@@ -1,6 +1,9 @@
 from selenium import webdriver
 import chromedriver_binary
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 import time
 
 
@@ -20,7 +23,7 @@ class YouTubeScraper:
 
     def scrape(self):
         self.driver.get(self.video)
-        # self.driver.implicitly_wait(1)
+        #self.driver.implicitly_wait(1)
         self.accept_cookies()
         self.scroll_to_bottom()
         self.extract_comments()
@@ -85,10 +88,16 @@ class YouTubeScraper:
                 self.comments['replies'].append(None)
 
     def accept_cookies(self):
-        x = self.driver.find_element(by=By.CSS_SELECTOR,
-                                     value="[aria-label='Accept the use of cookies and other data for the purposes described']")
-        x.click()
-        time.sleep(2)
+        WebDriverWait(self.driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[aria-label='Accept the use of cookies and other data for the purposes described']"))).click()
+
+        # element = WebDriverWait(self.driver, 5).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, "[aria-label='Accept the use of cookies and other data for the purposes described']"))
+        # )
+        #
+        # # x = self.driver.find_element(by=By.CSS_SELECTOR,
+        # #                              value="[aria-label='Accept the use of cookies and other data for the purposes described']")
+        # element.click()
+        # time.sleep(2)
 
     def skip_ad(self):
         button = self.driver.find_element(by=By.CLASS_NAME, value='ytp-ad-skip-button-container')
